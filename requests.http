@@ -1,100 +1,48 @@
-# You can use this file to easily send requests to your API.
-# Prerequisite: humao.rest-client Vscode plugin (already present on codespace)
-# High-level overview of REST API concepts used here: https://www.packtpub.com/en-us/learning/how-to-tutorials/what-are-rest-verbs-and-status-codes-tutorial
+# ==========================================
+# Library Management System - API Requests
+# ==========================================
+# Prerequisite: humao.rest-client Vscode plugin
+# TIP: Rulează cererile în ordine, de sus în jos. Cererile de împrumut/returnare
+# folosesc automat ID-ul cărții pe care o creezi la pasul de adăugare.
 
-# TIP: Run requests in order - later requests reference IDs from earlier responses
+# ==========================================
+# Members API
+# ==========================================
+
+### 1. Vezi toți membrii bibliotecii
+GET http://localhost:8080/api/members
+
+### 2. Înregistrează un membru nou 
+# (Setăm @name ca să putem folosi datele mai târziu dacă e nevoie)
+# @name createMember
+POST http://localhost:8080/api/members?name=Alexandru&email=alex@test.com
 
 
 # ==========================================
-# User Controller Endpoints
+# Books API
 # ==========================================
 
-### Get all users
-GET http://localhost:8080/api/users
+### 3. Vezi toate cărțile din bibliotecă
+GET http://localhost:8080/api/books
 
-### Create a new user (run this to populate variables for other requests)
-# @name createUser
-POST http://localhost:8080/api/users
+### 4. Adaugă o carte nouă în catalog
+# @name createBook
+POST http://localhost:8080/api/books
 Content-Type: application/json
 
 {
-    "name": "Jean Valjean",
-    "email": "prisoner24601@france.fr"
+    "title": "Clean Architecture",
+    "author": "Robert C. Martin",
+    "isbn": "978-0134494166",
+    "totalCopies": 2
 }
 
-### Get user by ID (uses ID from createUser response)
-GET http://localhost:8080/api/users/{{createUser.response.body.id}}
+### 5. Împrumută cartea abia adăugată (Scade availableCopies)
+# Observă cum își ia automat ID-ul generat la cererea nr. 4
+POST http://localhost:8080/api/books/{{createBook.response.body.id}}/borrow
 
-### Get user by email (uses email from createUser response)
-GET http://localhost:8080/api/users/by-email?email={{createUser.response.body.email}}
+### 6. Împrumută din nou (Ca să vezi cum scade la 0)
+POST http://localhost:8080/api/books/{{createBook.response.body.id}}/borrow
 
-### Update user name (PUT)
-PUT http://localhost:8080/api/users/{{createUser.response.body.id}}
-Content-Type: application/json
-
-{
-    "name": "Monsieur Madeleine"
-}
-
-### Change user name (PATCH)
-PATCH http://localhost:8080/api/users/{{createUser.response.body.id}}/name
-Content-Type: application/json
-
-{
-    "name": "Monsieur le Maire"
-}
-
-
-# ==========================================
-# Todo Controller Endpoints
-# ==========================================
-
-### Create a new todo (run this after createUser to populate variables)
-# @name createTodo
-POST http://localhost:8080/api/todos
-Content-Type: application/json
-
-{
-    "description": "Rescue Cosette from the Thénardiers",
-    "assigneeEmail": "{{createUser.response.body.email}}"
-}
-
-### Get todos by assignee email
-GET http://localhost:8080/api/todos?assigneeEmail={{createUser.response.body.email}}
-
-### Get todo by ID (uses ID from createTodo response)
-GET http://localhost:8080/api/todos/{{createTodo.response.body.id}}
-
-### Mark todo as done
-PATCH http://localhost:8080/api/todos/{{createTodo.response.body.id}}/done
-Content-Type: application/json
-
-true
-
-### Assign todo to another user
-# Note: You'll need another user to exist for this to work
-PATCH http://localhost:8080/api/todos/{{createTodo.response.body.id}}/assignee
-Content-Type: application/json
-
-{
-    "newAssigneeEmail": "frodo@theshire.me"
-}
-
-### Edit todo description
-PATCH http://localhost:8080/api/todos/{{createTodo.response.body.id}}/description
-Content-Type: application/json
-
-{
-    "description": "Escape from Inspector Javert"
-}
-
-
-# ==========================================
-# Cleanup (run these last)
-# ==========================================
-
-### Delete todo
-DELETE http://localhost:8080/api/todos/{{createTodo.response.body.id}}
-
-### Delete user
-DELETE http://localhost:8080/api/users/{{createUser.response.body.id}}
+### 7. Returnează cartea (Crește la loc availableCopies)
+POST http://localhost:8080/api/books/{{createBook.response.body.id}}/return
